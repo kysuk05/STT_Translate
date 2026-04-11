@@ -1,8 +1,10 @@
 from faster_whisper import WhisperModel
 from app.config import DEVICE, WHISPER_MODEL_SIZE, WHISPER_COMPUTE_TYPE
+import logging
 
 class WhisperService:
     def __init__(self):
+        self.logger = logging.getLogger(__name__)
         self.model = WhisperModel(
             WHISPER_MODEL_SIZE,
             device=DEVICE,
@@ -10,5 +12,9 @@ class WhisperService:
         )
 
     def transcribe(self, audio_path: str) -> str:
-        segments, _ = self.model.transcribe(audio_path)
-        return " ".join(segment.text for segment in segments)
+        try:
+            segments, _ = self.model.transcribe(audio_path)
+            return " ".join(segment.text for segment in segments).strip()
+        except Exception:
+            self.logger.exception("Whisper transcribe failed: %s", audio_path)
+            raise
